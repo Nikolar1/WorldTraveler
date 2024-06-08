@@ -1,0 +1,14 @@
+FROM maven:3.9.2 AS maven
+LABEL authors="Nikola Radojcic"
+WORKDIR /usr/src/app
+COPY ./backend /usr/src/app
+RUN mvn package
+FROM respo/jdk20
+ARG JAR_FILE=world-traveler.jar
+
+WORKDIR /opt/app
+COPY --from=maven /usr/src/app/target/${JAR_FILE} /opt/app/
+COPY ./backend/data /opt/app/data
+ENTRYPOINT ["java", "-Xmx3g", "-jar","world-traveler.jar"]
+EXPOSE 8085
+HEALTHCHECK --interval=10s --retries=5 --start-period=6s --timeout=10s CMD wget --no-verbose --tries=1 --spider localhost:8085/actuator/health || exit 1
