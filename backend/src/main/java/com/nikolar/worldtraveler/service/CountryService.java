@@ -49,7 +49,7 @@ public class CountryService {
         return countryMapper.entityToDto(countryRepository.findAll());
     }
 
-    public CountryDto getCountryId(Long id){
+    public CountryDto getCountryById(Long id){
         return countryMapper.entityToDto(countryRepository.findById(id).orElse(null));
     }
 
