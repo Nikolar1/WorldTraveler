@@ -9,6 +9,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class CountryPairDto {
+    private Long index;
     private Long firstCountryId;
     private Long secondCountryId;
     private Set<Long> path;

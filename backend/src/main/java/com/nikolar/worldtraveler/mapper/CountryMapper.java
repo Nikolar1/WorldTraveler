@@ -111,14 +111,14 @@ public class CountryMapper {
         return projection;
     }
 
-    public List<CountryIdsForGraphDto> entityProjectIdsForGraph(List<Country> dtoList){
-        if(dtoList == null){
+    public List<CountryIdsForGraphDto> entityProjectIdsForGraph(List<Country> countryList){
+        if(countryList == null){
             return null;
         }
-        if (dtoList.isEmpty()){
+        if (countryList.isEmpty()){
             return new LinkedList<CountryIdsForGraphDto>();
         }
-        return dtoList
+        return countryList
                 .stream()
                 .map(this::entityProjectIdsForGraph)
                 .collect(Collectors.toCollection(LinkedList::new));
