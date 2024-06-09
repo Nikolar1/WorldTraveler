@@ -1,7 +1,6 @@
 package com.nikolar.worldtraveler.dto;
 
 import com.nikolar.worldtraveler.model.Country;
-import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.Geometry;
 
@@ -12,10 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class CountryDto {
+public class CountryIdsForGraphDto {
     private Long id;
-    private String name;
-    private Geometry geom;
-    private List<Long> neighbors;
-
+    private List<Long> neighborIds;
 }

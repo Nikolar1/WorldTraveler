@@ -2,12 +2,14 @@ package com.nikolar.worldtraveler.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.locationtech.jts.geom.Geometry;
 
 import java.util.List;
 
 @Entity
+@NoArgsConstructor
 @Getter
 @Setter
 public class Country {
@@ -27,6 +29,10 @@ public class Country {
     )
     private List<Country> neighbors;
 
+    public Country(Long id){
+        this();
+        this.id = id;
+    }
 
 
 }
