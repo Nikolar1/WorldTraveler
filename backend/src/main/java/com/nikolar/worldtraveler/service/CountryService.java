@@ -19,8 +19,8 @@ public class CountryService {
     private final CountryMapper countryMapper;
     private final CountryGraph countryGraph;
 
-    private volatile Map<Long, CountryPairDto> countryPairs = new HashMap<>();
-    private AtomicLong pairIndex = new AtomicLong(0L);
+    private final Map<Long, CountryPairDto> countryPairs = new HashMap<>();
+    private final AtomicLong pairIndex = new AtomicLong(0L);
 
     public CountryService(CountryRepository countryRepository, CountryMapper countryMapper){
         this.countryRepository = countryRepository;
@@ -38,7 +38,11 @@ public class CountryService {
 
     public boolean checkIfSetContainsPath(Long index, Set<Long> marked){
         CountryPairDto countryPairDto = countryPairs.get(index);
-        return countryGraph.idSetContainsPath(countryPairDto.getFirstCountryId(), countryPairDto.getSecondCountryId(), marked);
+        if(countryGraph.idSetContainsPath(countryPairDto.getFirstCountryId(), countryPairDto.getSecondCountryId(), marked)){
+            countryPairs.remove(index);
+            return true;
+        }
+        return false;
     }
 
     public List<CountryDto> getAllCountries(){
