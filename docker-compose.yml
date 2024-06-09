@@ -21,7 +21,7 @@ services:
     depends_on:
       - postgres_db
     environment:
-      - GEOSERVER_ADMIN_PASSWORD=root
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
 
   backend:
     build:
@@ -35,7 +35,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/worldtraveler
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_PASSWORD: geoserver
       GEOSERVER_URL: http://geoserver:8080/geoserver
 
   frontend:

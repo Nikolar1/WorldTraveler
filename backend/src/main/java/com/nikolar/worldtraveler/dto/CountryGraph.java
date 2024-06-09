@@ -1,10 +1,14 @@
 package com.nikolar.worldtraveler.dto;
 
+import com.nikolar.worldtraveler.service.CountryService;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class CountryGraph {
+    private final Logger logger = LoggerFactory.getLogger(CountryGraph.class);
     private final Random random = new Random();
     private final Map<Long, Set<Long>> neighbours;
     private final List<List<Long>> connectedComponents;
@@ -14,6 +18,7 @@ public class CountryGraph {
     private final int numberOfEdges;
 
     public CountryGraph(List<CountryIdsForGraphDto> countries){
+        logger.info("Creating country graph");
         numberOfVertices = countries.size();
         neighbours = new HashMap<>();
         int numberOfEdges = 0;
@@ -26,6 +31,7 @@ public class CountryGraph {
     }
 
     private List<List<Long>> generateConnectedComponents(){
+        logger.info("Generating connected components");
         List<List<Long>> connectedComponents = new LinkedList<>();
         Set<Long> marked = new HashSet<>();
         for( Long country: neighbours.keySet()){
@@ -72,6 +78,7 @@ public class CountryGraph {
                     countryPairDto = null;
             }
         }while (countryPairDto == null);
+        logger.info("Generated country pair for country ids: 1:" + countryPairDto.getFirstCountryId() + ", 2:" + countryPairDto.getSecondCountryId());
         return countryPairDto;
     }
 
@@ -87,6 +94,7 @@ public class CountryGraph {
         while (!queue.isEmpty()) {
             Long current = queue.poll();
             if (current.equals(secondId)) {
+                logger.info("Path found for country ids: 1:" + firstId + ", 2:" + secondId);
                 return reconstructPath(predecessors, secondId);
             }
             for (Long neighbor : neighbours.get(current)) {
@@ -97,6 +105,7 @@ public class CountryGraph {
                 }
             }
         }
+        logger.info("No path found for country ids: 1:" + firstId + ", 2:" + secondId);
         return Collections.emptySet();
     }
 
@@ -109,8 +118,10 @@ public class CountryGraph {
     }
 
     public boolean idSetContainsPath(Long firstId, Long secondId, Set<Long> marked){
-        if (marked.isEmpty() || !(marked.contains(firstId) && marked.contains(secondId)) || (!firstId.equals(secondId) && marked.size() <= 2))
+        if (marked.isEmpty() || !(marked.contains(firstId) && marked.contains(secondId)) || (!firstId.equals(secondId) && marked.size() <= 2)) {
+            logger.info("The invalid set passed for country ids: 1:" + firstId + ", 2:" + secondId);
             return false;
+        }
         Map<Long, Set<Long>> neighboursInPath = new HashMap<>();
         for (Long country : marked){
             Set<Long> countryNeighbours = new HashSet<>();

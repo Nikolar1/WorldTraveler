@@ -21,7 +21,7 @@ public class Country {
     @Column
     private Geometry geom;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "country_neighbors",
             joinColumns = @JoinColumn(name = "country_id"),
