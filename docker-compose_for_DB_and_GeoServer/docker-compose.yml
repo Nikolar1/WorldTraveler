@@ -1,0 +1,22 @@
+services:
+  postgres_db:
+    image: postgis/postgis:latest
+    container_name: PostgresCont
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: worldtraveler
+    ports:
+      - "5432:5432"
+    expose:
+      - '5432'
+
+  geoserver:
+    image: oscarfonts/geoserver:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres_db
+    environment:
+      - GEOSERVER_ADMIN_PASSWORD=geoserver

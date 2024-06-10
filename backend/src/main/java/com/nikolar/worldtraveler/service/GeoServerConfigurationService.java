@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,11 +46,11 @@ public class GeoServerConfigurationService {
     }
 
     public void configureGeoServer(){
-        logger.info("Starting GeoServer configuration");
-        createWorkspace();
-        createPostGISDataStore();
-        createLayer();
-        logger.info("Successfully configured GeoServer");
+//        logger.info("Starting GeoServer configuration");
+//        createWorkspace();
+//        createPostGISDataStore();
+//        createLayer();
+//        logger.info("Successfully configured GeoServer");
     }
     private void createWorkspace() {
         logger.info("Creating workspace in GeoServer");
@@ -66,18 +63,19 @@ public class GeoServerConfigurationService {
         String requestBody = "<workspace><name>" + workspaceName + "</name></workspace>";
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    createWorkspaceUrl,
+                    requestEntity,
+                    String.class);
 
-
-        ResponseEntity<String> response = restTemplate.exchange(
-                createWorkspaceUrl,
-                HttpMethod.POST,
-                requestEntity,
-                String.class);
-
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            logger.info("Workspace created successfully in GeoServer");
-        } else {
-            logger.error("Failed to create workspace in GeoServer. Status code: " + response.getStatusCode());
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                logger.info("Workspace created successfully in GeoServer");
+            } else {
+                logger.error("Failed to create workspace in GeoServer. Status code: " + response.getStatusCode());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -91,7 +89,6 @@ public class GeoServerConfigurationService {
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("name", layerName);
-        // Add more configuration properties as needed
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
