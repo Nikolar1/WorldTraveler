@@ -13,7 +13,6 @@ import java.util.List;
 public class CountryDto {
     private Long id;
     private String name;
-    private Geometry geom;
     private List<Long> neighbors;
 
 }

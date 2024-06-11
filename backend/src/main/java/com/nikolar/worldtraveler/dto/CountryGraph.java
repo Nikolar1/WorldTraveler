@@ -41,6 +41,11 @@ public class CountryGraph {
                 connectedComponents.add(connectedComponent);
             }
         }
+        //Connected components of size 8 or less are useless or boring for our game
+        connectedComponents = connectedComponents
+                .stream()
+                .filter(x -> !(x.isEmpty() || x.size()<=8))
+                .toList();
         return connectedComponents;
     }
 

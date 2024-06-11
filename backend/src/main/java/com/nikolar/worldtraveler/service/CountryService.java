@@ -159,5 +159,10 @@ public class CountryService {
         return countryMapper.entityToDto(countryRepository.findById(id).orElse(null));
     }
 
+    public CountryDto getCountryByName(String name){
+        logger.info("Getting country by name: " + name);
+        return countryMapper.entityToDto(countryRepository.findCountryByName(name).orElse(null));
+    }
+
 
 }

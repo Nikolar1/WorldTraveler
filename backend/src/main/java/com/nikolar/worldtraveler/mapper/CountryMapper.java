@@ -20,7 +20,7 @@ public class CountryMapper {
         Country entity = new Country();
         entity.setId(dto.getId());
         entity.setName(dto.getName());
-        entity.setGeom(dto.getGeom());
+//        entity.setGeom(dto.getGeom());
         entity.setNeighbors(dto
                 .getNeighbors()
                 .stream()
@@ -50,7 +50,7 @@ public class CountryMapper {
         CountryDto dto = new CountryDto();
         dto.setId(entity.getId());
         dto.setName(entity.getName());
-        dto.setGeom(entity.getGeom());
+//        dto.setGeom(entity.getGeom());
         dto.setNeighbors(entity
                 .getNeighbors()
                 .stream()
