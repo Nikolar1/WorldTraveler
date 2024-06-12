@@ -13,4 +13,5 @@ public class CountryPairDto {
     private Long firstCountryId;
     private Long secondCountryId;
     private Set<Long> path;
+    private String sldContent;
 }

@@ -6,8 +6,10 @@ import com.nikolar.worldtraveler.model.Country;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -71,6 +73,19 @@ public class CountryMapper {
                 .stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public Set<CountryDto> entityToDto(Set<Country> entityList){
+        if(entityList == null){
+            return null;
+        }
+        if (entityList.isEmpty()){
+            return new HashSet<>();
+        }
+        return entityList
+                .stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     public CountryIdsForGraphDto dtoProjectIdsForGraph(CountryDto dto){

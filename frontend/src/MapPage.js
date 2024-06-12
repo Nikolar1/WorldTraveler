@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { MapContainer, WMSTileLayer, GeoJSON } from 'react-leaflet';
+import { MapContainer, WMSTileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const MapPage = () => {
@@ -10,20 +10,22 @@ const MapPage = () => {
     const [allCountries, setAllCountries] = useState([]);
     const [markedCountries, setMarkedCountries] = useState(new Set());
     const [countryName, setCountryName] = useState('');
+    const [sldBody, setSldBody] = useState('');
 
     useEffect(() => {
-        // Fetch initial data
         axios.get(`${backendURL}/allCountries`).then(response => setAllCountries(response.data));
     }, []);
 
     useEffect(() => {
-        // Fetch initial data
         if (allCountries.length > 0 && !countryPair) {
             axios.get(`${backendURL}/countryPair`).then(response => {
                 const countryPair = response.data;
                 countryPair.firstCountryName = allCountries.find(x => x.id === countryPair.firstCountryId).name;
                 countryPair.secondCountryName = allCountries.find(x => x.id === countryPair.secondCountryId).name;
                 setCountryPair(countryPair);
+                setSldBody(countryPair.sldContent);
+                setMarkedCountries([countryPair.firstCountryId,countryPair.secondCountryId])
+                console.log(countryPair)
             });
         }
     }, [allCountries]);
@@ -32,35 +34,29 @@ const MapPage = () => {
         axios.get(`${backendURL}/countryByName?name=${countryName}`).then(response => {
             const country = response.data;
             if (country) {
-                setMarkedCountries(prev => new Set(prev).add(country.id));
-                checkForPath([...markedCountries, country.id]);
+                setMarkedCountries(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(country.id);
+                    updateSLD(newSet);
+                    return newSet;
+                });
             } else {
                 alert('Country not found');
             }
         });
     };
 
-    const checkForPath = (countrySet) => {
+    const updateSLD = (countrySet) => {
         axios.post(`${backendURL}/checkIfSetContainsPath`, {
             index: countryPair.index,
-            marked: countrySet,
+            marked: Array.from(countrySet),
         }).then(response => {
-            if (response.data) {
-                alert('Congratulations you found a path!!');
+            setSldBody(response.data.sldContent);
+            if (response.data.pathExists) {
+                alert(`Congratulations you found a path!! \n Shortest path was ${countryPair.path.length}`);
             }
-        });
-    };
-
-    const onEachFeature = (feature, layer) => {
-        const countryId = feature.properties.id;
-        const isMarked = markedCountries.has(countryId) ||
-            countryId === countryPair.firstCountryId ||
-            countryId === countryPair.secondCountryId;
-        layer.setStyle({
-            fillColor: isMarked ? 'blue' : 'gray',
-            fillOpacity: 1,
-            color: 'white',
-            weight: 1,
+        }).catch(error => {
+            console.error("There was an error checking the path: ", error);
         });
     };
 
@@ -71,16 +67,17 @@ const MapPage = () => {
                     <h2>Find the shortest path between {countryPair.firstCountryName} and {countryPair.secondCountryName}</h2>
                 </div>
             )}
-            <div style={{ height: '70vh' }}>
+            {sldBody && (<div style={{ height: '70vh' }}>
                 <MapContainer style={{ height: '100%' }} center={[20, 0]} zoom={2}>
                     <WMSTileLayer
                         url={`${geoserverURL}/ne/wms`}
-                        layers="ne:countryLayer"
+                        layers="ne:country"
                         format="image/png"
                         transparent={true}
+                        params={{ sld_body: sldBody }}
                     />
                 </MapContainer>
-            </div>
+            </div>)}
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
                 <input
                     type="text"

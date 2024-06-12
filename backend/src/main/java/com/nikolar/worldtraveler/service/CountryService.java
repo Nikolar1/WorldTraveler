@@ -6,6 +6,8 @@ import com.nikolar.worldtraveler.dto.CountryPairDto;
 import com.nikolar.worldtraveler.mapper.CountryMapper;
 import com.nikolar.worldtraveler.model.Country;
 import com.nikolar.worldtraveler.repository.CountryRepository;
+import com.nikolar.worldtraveler.request.CheckForPathRequest;
+import com.nikolar.worldtraveler.response.CheckForPathResponse;
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.json.JSONArray;
@@ -19,8 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class CountryService {
@@ -33,6 +39,10 @@ public class CountryService {
     private final AtomicLong pairIndex = new AtomicLong(0L);
 
     private final Logger logger = LoggerFactory.getLogger(CountryService.class);
+
+    @Value("${sld.template.path}")
+    private String sldTemplatePath;
+
 
     public CountryService(@Value("${geojson.filepath}") String geoJsonFilePath, CountryRepository countryRepository, CountryMapper countryMapper, GeoServerConfigurationService geoServerConfigurationService){
         this.countryRepository = countryRepository;
@@ -128,25 +138,34 @@ public class CountryService {
     }
 
 
-    public CountryPairDto generateNewCountryPair(){
+    public Optional<CountryPairDto> generateNewCountryPair(){
         Long index = pairIndex.incrementAndGet();
         logger.info("Generating new country pair for index: " + index);
         CountryPairDto result =  countryGraph.generateNewCountryPair();
         result.setIndex(index);
+        Optional<String> sldContent = generateSldContent(Set.of(result.getFirstCountryId(), result.getSecondCountryId()));
+        if (sldContent.isEmpty())
+            return Optional.empty();
         countryPairs.put(index, result);
-        return result;
+        result.setSldContent(sldContent.get());
+        return Optional.of(result);
     }
 
-    public boolean checkIfSetContainsPath(Long index, Set<Long> marked){
+    public Optional<CheckForPathResponse> checkIfSetContainsPath(Long index, Set<Long> marked){
+        logger.info("Getting sld template");
+        Optional<String> sldContent = generateSldContent(marked);
+        if (sldContent.isEmpty()){
+            return Optional.empty();
+        }
         CountryPairDto countryPairDto = countryPairs.get(index);
         logger.info("Checking if passed set contains a path for pair on index: " + index);
         if(countryGraph.idSetContainsPath(countryPairDto.getFirstCountryId(), countryPairDto.getSecondCountryId(), marked)){
             countryPairs.remove(index);
             logger.info("Passed set for index: " + index + ", contains a path");
-            return true;
+            return Optional.of(new CheckForPathResponse(true, sldContent.get()));
         }
         logger.info("Passed set for index: " + index + ", does not contain a path");
-        return false;
+        return Optional.of(new CheckForPathResponse(false, sldContent.get()));
     }
 
     public List<CountryDto> getAllCountries(){
@@ -163,6 +182,21 @@ public class CountryService {
         logger.info("Getting country by name: " + name);
         return countryMapper.entityToDto(countryRepository.findCountryByName(name).orElse(null));
     }
+
+    private Optional<String> generateSldContent(Set<Long> marked) {
+        try {
+            String sldTemplate = Files.readString(Paths.get(sldTemplatePath));
+            List<CountryDto> countryDtos = countryMapper.entityToDto(countryRepository.findCountriesByIdIsIn(marked.stream().toList()));
+            String highlightedCountriesFilter = countryDtos.stream()
+                    .map(countryDto -> "<ogc:PropertyIsEqualTo><ogc:PropertyName>name</ogc:PropertyName><ogc:Literal>" + countryDto.getName() + "</ogc:Literal></ogc:PropertyIsEqualTo>")
+                    .collect(Collectors.joining());
+            return Optional.of(sldTemplate.replace("${highlightedCountries}", highlightedCountriesFilter));
+        } catch (IOException e) {
+            logger.error("Failed to retrieve sld template");
+            return Optional.empty();
+        }
+    }
+
 
 
 }
