@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LandingPage from './LandingPage';
-import MapPage from './MapPage';
+import LandingPage from './pages/LandingPage';
+import MapPage from './pages/MapPage';
 
 function App() {
   return (

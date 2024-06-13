@@ -70,7 +70,8 @@ public class CountryService {
             List<Country> countries = new LinkedList<>();
 
             GeoJsonReader reader = new GeoJsonReader();
-            int s = 0;
+            int serbiaIndex = 0;
+
             Geometry kosovo = null;
 
             for (int i = 0; i < features.length(); i++) {
@@ -90,23 +91,34 @@ public class CountryService {
                 country.setNeighbors(new LinkedList<>());
                 countries.add(country);
                 if (country.getName().equals("Republic of Serbia")){
-                    s = countries.size()-1;
+                    serbiaIndex = countries.size()-1;
                 }
             }
             logger.info("Returning de-jure territory");
-            Country serbia = countries.get(s);
+            Country serbia = countries.get(serbiaIndex);
             serbia.setGeom(serbia.getGeom().union(kosovo));
 
             logger.info("Saving initial country values");
+            serbia.setName("Serbia");
             countryRepository.saveAll(countries);
             logger.info("Pulling saved country values");
             countries = countryRepository.findAll();
+
+            Map<String, Set<String>> wronglyNeighbouringCountries = new HashMap<>();
+            wronglyNeighbouringCountries.put("France", Set.of("Brazil", "Suriname"));
+            wronglyNeighbouringCountries.put("Brazil", Set.of("France"));
+            wronglyNeighbouringCountries.put("Suriname", Set.of("France"));
 
             logger.info("Finding country connections");
             for (Country firstCountry : countries) {
                 Geometry firstCountryGeom = firstCountry.getGeom();
                 for (Country secondCountry : countries) {
-                    if (!firstCountry.getName().equals(secondCountry.getName())){
+                    if (!firstCountry.getName().equals(secondCountry.getName())
+                            && !(
+                                    wronglyNeighbouringCountries.containsKey(firstCountry.getName()) &&
+                                    !wronglyNeighbouringCountries.get(firstCountry.getName()).contains(secondCountry.getName())
+                            )
+                    ){
                         Geometry secondCountryGeom = secondCountry.getGeom();
                         if (firstCountryGeom.getEnvelopeInternal().intersects(secondCountryGeom.getEnvelopeInternal())
                                 && firstCountryGeom.intersects(secondCountryGeom)){
@@ -124,7 +136,7 @@ public class CountryService {
                 logger.error("Wrong number of countries present, integrity check failed");
 
             logger.info("Checking data validity");
-            serbia = countryRepository.getCountryByName("Republic of Serbia");
+            serbia = countryRepository.getCountryByName("Serbia");
             boolean isDataValid = serbia.getNeighbors()
                     .stream()
                     .anyMatch((Country country) -> country.getName().equals("Albania"));
