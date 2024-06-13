@@ -18,6 +18,19 @@ To run the project you will need docker and docker-compose. In the project root 
 	docker-compose up --build
 
 The app will start and be accessible at `http://localhost:3000`.
+For the map to work GeoServer needs to be set up.
+In GeoServer a new data store needs to be added.
+
+GeoServer username and password are admin and geoserver by default
+
+Chose PostGis and set postgres_db as the host and worldtraveler as the database. Leave the rest as default and save.
+
+PostGis username and password are root and root by default
+
+Now a new layer should be created from this newly added database. 
+Publish country table set the layer name as country and compute the bounding boxes from native bounds.
+
+
 
 > **Note:** Make sure that docker engine is running before executing the command.
 
